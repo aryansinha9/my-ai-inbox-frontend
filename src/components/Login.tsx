@@ -18,8 +18,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
     onLogin(email);
   };
   
-  const handleMetaLogin = () => {
-    window.location.href = 'http://localhost:4000/api/auth/instagram';
+    const handleMetaLogin = () => {
+    // --- THE FIX ---
+    // We now construct the URL dynamically using the environment variable.
+    // This will correctly point to your live Render server when deployed.
+    const authUrl = `${import.meta.env.VITE_API_BASE_URL}/auth/instagram`;
+    window.location.href = authUrl;
   };
 
   return (
