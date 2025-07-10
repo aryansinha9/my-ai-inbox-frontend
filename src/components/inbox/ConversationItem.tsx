@@ -71,18 +71,17 @@ const handleGenerateReply = async () => {
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-y-3">
              <div className="flex items-center gap-4">
-                <a
-                // --- THE FIX ---
-                // Use Meta's official short link for DMs. This works on both
-                // mobile (opens the app) and desktop (opens the website).
-                href={`https://ig.me/m/${contactId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 hover:text-violet-800"
-              >
-                <ExternalLinkIcon className="h-4 w-4" />
-                Open in App
-              </a>
+            <a
+               // --- THE FIX ---
+               // This link is guaranteed to work on desktop. On mobile, it will prompt to open the app.
+               href={`https://www.instagram.com/direct/inbox/`}
+               target="_blank"
+               rel="noopener noreferrer"
+               className="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 hover:text-violet-800"
+             >
+               <ExternalLinkIcon className="h-4 w-4" />
+               Open Inbox
+             </a>
                  <button
                     onClick={handleGenerateReply}
                     disabled={isGenerating || !isAiEnabled || !isPlatformAiEnabled}
