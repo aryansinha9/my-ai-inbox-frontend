@@ -13,22 +13,19 @@ const apiClient = axios.create({
 
 // --- AUTHENTICATION FUNCTIONS ---
 
-export const login = async (email) => {
-  // This is for the form-based login, which currently just gets the mock user
+export const login = async (email: string) => {
   const response = await apiClient.post('/login', { email });
   return response.data;
 };
 
-export const getUserById = async (userId) => {
-  // Fetches user data after a successful social login
+export const getUserById = async (userId: string) => {
   const response = await apiClient.get(`/user/${userId}`);
   return response.data;
 };
 
-
 // --- CONVERSATION FUNCTIONS ---
 
-export const fetchConversations = async (platform) => {
+export const fetchConversations = async (platform: string) => {
     const storedUser = localStorage.getItem('ai-inbox-user');
     if (!storedUser) {
         console.error("No user found in localStorage to fetch conversations for.");
@@ -43,13 +40,9 @@ export const fetchConversations = async (platform) => {
             params: { userId: userId }
         });
 
-        // --- THE FIX ---
-        // This takes ALL properties from the backend object (`...c`)
-        // and just renames `_id` to `id` for the frontend.
-        // This ensures that new fields like `contactId` are automatically included.
-        return response.data.map(c => ({
-            ...c, // Spread all properties from the source object
-            id: c._id // Overwrite/add the 'id' property
+        return response.data.map((c: any) => ({
+            ...c,
+            id: c._id
         }));
 
     } catch (error) {
@@ -58,50 +51,42 @@ export const fetchConversations = async (platform) => {
     }
 };
 
-export const updateConversationAiStatus = async (conversationId, isEnabled) => {
+export const updateConversationAiStatus = async (conversationId: string, isEnabled: boolean) => {
   const response = await apiClient.patch(`/conversations/${conversationId}/toggle-ai`, { isEnabled });
   return response.data.isAiEnabled;
 };
 
+// --- PLATFORM STATUS FUNCTIONS ---
 
-// --- PLATFORM STATUS FUNCTIONS (FIX FOR Inbox.tsx) ---
-
-export const fetchPlatformAiStatus = async (platform) => {
-  // --- THIS IS THE FIX ---
-  // We are replacing the mocked implementation with a real API call
-  // to the new endpoint we just created on the backend.
+export const fetchPlatformAiStatus = async (platform: string) => {
   try {
     const response = await apiClient.get(`/platform/${platform}/status`);
     return response.data.isEnabled;
   } catch (error) {
     console.error(`Error fetching platform AI status for ${platform}:`, error);
-    // Return a default value in case of an error to prevent crashing
     return true; 
   }
 };
 
-export const updatePlatformAiStatus = async (platform, isEnabled) => {
+export const updatePlatformAiStatus = async (platform: string, isEnabled: boolean) => {
   const response = await apiClient.patch(`/platform/${platform}/toggle-ai`, { isEnabled });
   return response.data.isEnabled;
 };
 
-
-// --- AI REPLY FUNCTION (FIX FOR ConversationItem.tsx) ---
-
-export const generateAiReply = async (prompt) => {
-  // NOTE: The "Suggest Reply" button is a manual feature. The automated replies
-  // happen on the backend via webhooks. We can build a real endpoint for this
-  // later if we want to keep the manual suggestion feature.
-  console.log("Mocking AI reply generation for prompt:", prompt);
-  return new Promise(resolve => 
-    setTimeout(() => resolve(`This is a mock AI reply to: "${prompt}"`), 1000)
-  );
+// --- UPDATED AI REPLY FUNCTION ---
+export const generateAiReply = async (prompt: string) => {
+  try {
+    const response = await apiClient.post('/suggest-reply', { prompt });
+    return response.data.reply; // Return the 'reply' field from the JSON response
+  } catch (error) {
+    console.error("Error generating AI reply:", error);
+    throw new Error("Failed to generate suggestion. Please try again.");
+  }
 };
 
 // --- ONBOARDING FUNCTIONS ---
 
-// Fetches the onboarding session data, including the list of pages
-export const getOnboardingSession = async (sessionId) => {
+export const getOnboardingSession = async (sessionId: string) => {
   try {
     const response = await apiClient.get(`/onboarding-session/${sessionId}`);
     return response.data;
@@ -111,14 +96,13 @@ export const getOnboardingSession = async (sessionId) => {
   }
 };
 
-// Sends the user's final page choice to the backend
-export const finalizeOnboarding = async (sessionId, selectedPageId) => {
+export const finalizeOnboarding = async (sessionId: string, selectedPageId: string) => {
   try {
     const response = await apiClient.post('/finalize-onboarding', { 
       sessionId, 
       selectedPageId 
     });
-    return response.data; // The full final user object
+    return response.data;
   } catch (error) {
     console.error('Error finalizing onboarding:', error);
     throw new Error('Failed to complete onboarding');
