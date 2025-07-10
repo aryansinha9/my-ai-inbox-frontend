@@ -3,15 +3,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import SelectPage from './components/SelectPage'; // IMPORT NEW COMPONENT
 import { type User } from './types';
-import { login, getUserById } from './services/api'; // Import getUserById
+import { login, getUserById } from './services/api';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-
-  // This function is now ONLY for the email/password form
+  
+  // NEW STATE for the onboarding flow
+  const [onboardingSessionId, setOnboardingSessionId] = useState<string | null>(null);
+  
   const handleLogin = useCallback(async (email: string) => {
     setIsLoading(true);
     setError('');
@@ -32,30 +35,45 @@ const App: React.FC = () => {
     setUser(null);
   }, []);
 
-  // This hook handles ALL initial authentication checks
+  // NEW HANDLER for when page selection is complete
+  const handleOnboardingComplete = useCallback((finalizedUser: User) => {
+    localStorage.setItem('ai-inbox-user', JSON.stringify(finalizedUser));
+    setUser(finalizedUser);
+    setOnboardingSessionId(null); // Clear the session ID to show the dashboard
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, []);
+  
+  // This hook now handles ALL initial authentication checks, including the new step
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       const urlParams = new URLSearchParams(window.location.search);
       const userIdFromUrl = urlParams.get('userId');
+      const sessionIdFromUrl = urlParams.get('sessionId'); // LOOK FOR SESSION ID
 
-      // Case 1: The user is returning from the OAuth flow with a user ID
+      // Case 1: Returning from OAuth to select a page
+      if (sessionIdFromUrl) {
+        setOnboardingSessionId(sessionIdFromUrl);
+        setIsLoading(false);
+        return; // Stop further checks, render SelectPage component
+      }
+      
+      // Case 2: Returning from OAuth with finalized user ID
       if (userIdFromUrl) {
         try {
           const loggedInUser = await getUserById(userIdFromUrl);
           localStorage.setItem('ai-inbox-user', JSON.stringify(loggedInUser));
           setUser(loggedInUser);
         } catch (err) {
-          console.error("Failed to fetch user by ID after OAuth redirect", err);
           setError('Failed to complete login. Please try again.');
         } finally {
-          // Clean the URL so a refresh doesn't re-trigger this
           window.history.replaceState({}, document.title, window.location.pathname);
         }
         setIsLoading(false);
-        return; // Stop further checks
+        return;
       }
 
-      // Case 2: The user is returning to the site, check for a stored session
+      // Case 3: Check for stored session in local storage
       try {
         const storedUser = localStorage.getItem('ai-inbox-user');
         if (storedUser) {
@@ -63,32 +81,41 @@ const App: React.FC = () => {
         }
       } catch (e) {
         console.error("Failed to parse stored user", e);
-        // Clear corrupted data
         localStorage.removeItem('ai-inbox-user');
       } finally {
-        setIsLoading(false); // Stop loading after all checks are complete
+        setIsLoading(false);
       }
     };
     
     checkAuth();
-  }, []); // Empty dependency array means this runs only once on initial mount
+  }, []);
 
-  // Display a loading indicator while authentication checks are in progress
+  // UPDATED RENDER LOGIC
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
-        <p>Loading...</p> {/* You can replace this with your Spinner component */}
+        <p>Loading...</p>
       </div>
     );
   }
-
-  // If after all checks there is no user, show the Login page
-  if (!user) {
-    return <Login onLogin={handleLogin} isLoading={isLoading} error={error} />;
+  
+  // Show page selection screen if onboarding session exists
+  if (onboardingSessionId) {
+    return (
+      <SelectPage 
+        sessionId={onboardingSessionId} 
+        onOnboardingComplete={handleOnboardingComplete} 
+      />
+    );
   }
-
-  // If there is a user, show the Dashboard
-  return <Dashboard user={user} onLogout={handleLogout} />;
+  
+  // Show dashboard for finalized users
+  if (user) {
+    return <Dashboard user={user} onLogout={handleLogout} />;
+  }
+  
+  // Show main login page
+  return <Login onLogin={handleLogin} isLoading={false} error={error} />;
 };
 
 export default App;
