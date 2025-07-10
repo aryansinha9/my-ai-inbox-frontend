@@ -1,4 +1,4 @@
-// frontend/src/services/api.js
+// frontend/src/services/api.ts
 
 import axios from 'axios';
 
@@ -96,4 +96,31 @@ export const generateAiReply = async (prompt) => {
   return new Promise(resolve => 
     setTimeout(() => resolve(`This is a mock AI reply to: "${prompt}"`), 1000)
   );
+};
+
+// --- ONBOARDING FUNCTIONS ---
+
+// Fetches the onboarding session data, including the list of pages
+export const getOnboardingSession = async (sessionId) => {
+  try {
+    const response = await apiClient.get(`/onboarding-session/${sessionId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching onboarding session:', error);
+    throw new Error('Failed to load onboarding session');
+  }
+};
+
+// Sends the user's final page choice to the backend
+export const finalizeOnboarding = async (sessionId, selectedPageId) => {
+  try {
+    const response = await apiClient.post('/finalize-onboarding', { 
+      sessionId, 
+      selectedPageId 
+    });
+    return response.data; // The full final user object
+  } catch (error) {
+    console.error('Error finalizing onboarding:', error);
+    throw new Error('Failed to complete onboarding');
+  }
 };
