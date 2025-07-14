@@ -10,8 +10,8 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
-  const [email, setEmail] = useState<string>('jane.doe@example.com');
-  const [password, setPassword] = useState<string>('password123');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
