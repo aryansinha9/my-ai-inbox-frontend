@@ -16,20 +16,6 @@ const App: React.FC = () => {
   // This state remains the same, it's the trigger for showing the SelectPage component.
   const [onboardingSessionId, setOnboardingSessionId] = useState<string | null>(null);
   
-  const handleLogin = useCallback(async (email: string) => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const loggedInUser = await login(email);
-      localStorage.setItem('ai-inbox-user', JSON.stringify(loggedInUser));
-      setUser(loggedInUser);
-    } catch (err) {
-      setError('Failed to log in. Please try again.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('ai-inbox-user');
