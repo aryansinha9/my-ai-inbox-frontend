@@ -1,39 +1,24 @@
-// frontend/src/components/Login.tsx
+// frontend/src/components/ui/Login.tsx
 
-import React, { useState } from 'react';
+import React from 'react';
 import { FacebookIcon } from './icons/FacebookIcon';
 
+// This component now has fewer responsibilities.
 interface LoginProps {
-  onLogin: (email: string) => void;
   isLoading: boolean;
-  error: string;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
-  const [email, setEmail] = useState<string>('jane.doe@example.com');
-  const [password, setPassword] = useState<string>('password123');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onLogin(email);
-  };
+const Login: React.FC<LoginProps> = ({ isLoading }) => {
   
-    const handleMetaLogin = () => {
-    // --- THE FIX ---
-    // We now construct the URL dynamically using the environment variable.
-    // This will correctly point to your live Render server when deployed.
+  const handleMetaLogin = () => {
     const authUrl = `${import.meta.env.VITE_API_BASE_URL}/auth/instagram`;
     window.location.href = authUrl;
   };
 
   return (
-    // CHANGE: Lighter background for a softer feel
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      
-      {/* The Login Card - Increased internal spacing with space-y-6 */}
       <div className="w-full max-w-sm space-y-6 rounded-2xl bg-white p-8 shadow-xl">
         
-        {/* Header Text - Added tracking-tight for a more compact look */}
         <div>
           <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
             Sign in to your dashboard
@@ -43,74 +28,28 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
           </p>
         </div>
         
-        {/* The Form */}
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          
-          {/* CHANGE: Inputs are now in a container with spacing, not stacked. */}
-          <div className="space-y-4">
-            {/* Email Input - Now fully rounded */}
-            <div>
-              <label htmlFor="email-address" className="sr-only">Email address</label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="block w-full rounded-md border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
-                placeholder="jane.doe@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            {/* Password Input - Also fully rounded */}
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="block w-full rounded-md border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          
-          {/* Sign In Button - CHANGE: New violet color and larger rounding */}
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex w-full justify-center rounded-lg bg-violet-600 py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:opacity-50"
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-        </form>
+        {/*
+          THE FORM IS NOW REMOVED.
+          We are commenting it out, but you can also delete it entirely.
+        
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            ... all the input fields and the old sign in button ...
+          </form>
 
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
+          THE DIVIDER IS ALSO REMOVED.
+          
+          <div className="relative">
+            ...
           </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-2 text-slate-400">Or continue with</span>
-          </div>
-        </div>
+        */}
 
-        {/* Sign in with Meta Button */}
+        {/* The ONLY login option is now with Meta */}
         <div>
           <button
             type="button"
             onClick={handleMetaLogin}
             disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white py-2 px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white py-3 px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
           >
             <FacebookIcon className="h-5 w-5" />
             Sign in with Meta
