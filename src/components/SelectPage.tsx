@@ -4,7 +4,7 @@ import { type User } from '../types';
 
 interface SelectPageProps {
   sessionId: string;
-  onOnboardingComplete: (user: User) => void;
+  onOnboardingComplete: (sessionId: string, selectedPageId: string) => void;
 }
 
 const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete }) => {
