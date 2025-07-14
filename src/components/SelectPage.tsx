@@ -38,7 +38,7 @@ const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete
     setError('');
     try {
       const finalUser = await finalizeOnboarding(sessionId, selectedPageId);
-      onOnboardingComplete(finalUser);
+      onOnboardingComplete(sessionId, selectedPageId);
     } catch (err) {
       setError('An error occurred. Please try again.');
       console.error(err);
