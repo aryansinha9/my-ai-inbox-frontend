@@ -3,16 +3,17 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-import SelectPage from './components/SelectPage'; // IMPORT NEW COMPONENT
+import SelectPage from './components/SelectPage';
 import { type User } from './types';
-import { login, getUserById } from './services/api';
+// Make sure finalizeOnboarding is imported
+import { login, getUserById, finalizeOnboarding } from './services/api';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   
-  // NEW STATE for the onboarding flow
+  // This state remains the same, it's the trigger for showing the SelectPage component.
   const [onboardingSessionId, setOnboardingSessionId] = useState<string | null>(null);
   
   const handleLogin = useCallback(async (email: string) => {
@@ -35,30 +36,45 @@ const App: React.FC = () => {
     setUser(null);
   }, []);
 
-  // NEW HANDLER for when page selection is complete
-  const handleOnboardingComplete = useCallback((finalizedUser: User) => {
-    localStorage.setItem('ai-inbox-user', JSON.stringify(finalizedUser));
-    setUser(finalizedUser);
-    setOnboardingSessionId(null); // Clear the session ID to show the dashboard
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }, []);
+  // --- THIS IS THE CORRECTED HANDLER ---
+  // Its job is now to finalize the process by calling the API.
+  const handleOnboardingComplete = useCallback(async (sessionId: string, selectedPageId: string) => {
+    setIsLoading(true);
+    setError('');
+    try {
+      // It calls the API with the data it receives from the SelectPage component.
+      const finalizedUser = await finalizeOnboarding(sessionId, selectedPageId);
+      
+      // On success, it saves the user and moves to the dashboard.
+      localStorage.setItem('ai-inbox-user', JSON.stringify(finalizedUser));
+      setUser(finalizedUser);
+      setOnboardingSessionId(null); // Clear the session ID to show the dashboard
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (err) {
+      setError('Failed to complete your setup. Please try logging in again.');
+      // If the API call fails, reset the flow.
+      setOnboardingSessionId(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []); // This callback has no dependencies.
   
-  // This hook now handles ALL initial authentication checks, including the new step
+  // This hook remains the same, as its logic is correct for starting the flow.
   useEffect(() => {
     const checkAuth = async () => {
       setIsLoading(true);
       const urlParams = new URLSearchParams(window.location.search);
       const userIdFromUrl = urlParams.get('userId');
-      const sessionIdFromUrl = urlParams.get('sessionId'); // LOOK FOR SESSION ID
+      const sessionIdFromUrl = urlParams.get('sessionId');
 
       // Case 1: Returning from OAuth to select a page
       if (sessionIdFromUrl) {
         setOnboardingSessionId(sessionIdFromUrl);
         setIsLoading(false);
-        return; // Stop further checks, render SelectPage component
+        return;
       }
       
-      // Case 2: Returning from OAuth with finalized user ID
+      // Case 2: An alternative login flow (can be kept)
       if (userIdFromUrl) {
         try {
           const loggedInUser = await getUserById(userIdFromUrl);
@@ -73,7 +89,7 @@ const App: React.FC = () => {
         return;
       }
 
-      // Case 3: Check for stored session in local storage
+      // Case 3: Check for a stored session in local storage
       try {
         const storedUser = localStorage.getItem('ai-inbox-user');
         if (storedUser) {
@@ -90,7 +106,7 @@ const App: React.FC = () => {
     checkAuth();
   }, []);
 
-  // UPDATED RENDER LOGIC
+  // The render logic determines what to show the user.
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
@@ -99,22 +115,24 @@ const App: React.FC = () => {
     );
   }
   
-  // Show page selection screen if onboarding session exists
+  // If we have an onboarding session ID, the user needs to select their page.
   if (onboardingSessionId) {
     return (
       <SelectPage 
         sessionId={onboardingSessionId} 
+        // Pass the new handler to the SelectPage component.
+        // It's up to SelectPage to call this function with the correct arguments when the user is done.
         onOnboardingComplete={handleOnboardingComplete} 
       />
     );
   }
   
-  // Show dashboard for finalized users
+  // If we have a finalized user object, show them the dashboard.
   if (user) {
     return <Dashboard user={user} onLogout={handleLogout} />;
   }
   
-  // Show main login page
+  // Otherwise, the user needs to log in.
   return <Login onLogin={handleLogin} isLoading={false} error={error} />;
 };
 
