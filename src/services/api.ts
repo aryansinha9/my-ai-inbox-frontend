@@ -26,34 +26,33 @@ export const getUserById = async (userId: string) => {
 // --- CONVERSATION FUNCTIONS ---
 
 export const fetchConversations = async (platform: string) => {
-    const storedUser = localStorage.getItem('ai-inbox-user');
-    if (!storedUser) {
-        console.error("No user found in localStorage to fetch conversations for.");
-        return [];
-    }
+  const storedUser = localStorage.getItem('ai-inbox-user');
+  if (!storedUser) {
+    console.error("No user found in localStorage to fetch conversations for.");
+    return [];
+  }
 
-    const user = JSON.parse(storedUser);
-    const userId = user._id;
+  const user = JSON.parse(storedUser);
+  const userId = user._id;
 
-    try {
-        const response = await apiClient.get(`/conversations/${platform}`, {
-            params: { userId: userId }
-        });
+  try {
+    const response = await apiClient.get(`/conversations/${platform}`, {
+      params: { userId: userId }
+    });
 
-        return response.data.map((c: any) => ({
-            ...c,
-            id: c._id
-        }));
-
-    } catch (error) {
-        console.error("Error fetching conversations:", error);
-        return [];
-    }
+    return response.data.map((c: any) => ({
+      ...c,
+      id: c._id
+    }));
+  } catch (error) {
+    console.error("Error fetching conversations:", error);
+    return [];
+  }
 };
 
 export const updateConversationAiStatus = async (conversationId: string, isEnabled: boolean) => {
   const response = await apiClient.patch(`/conversations/${conversationId}/toggle-ai`, { isEnabled });
-  return response.data.isAiEnabled;
+  return response.data.isEnabled;
 };
 
 // --- PLATFORM STATUS FUNCTIONS ---
@@ -64,7 +63,7 @@ export const fetchPlatformAiStatus = async (platform: string) => {
     return response.data.isEnabled;
   } catch (error) {
     console.error(`Error fetching platform AI status for ${platform}:`, error);
-    return true; 
+    return true;
   }
 };
 
@@ -98,9 +97,9 @@ export const getOnboardingSession = async (sessionId: string) => {
 
 export const finalizeOnboarding = async (sessionId: string, selectedPageId: string) => {
   try {
-    const response = await apiClient.post('/finalize-onboarding', { 
-      sessionId, 
-      selectedPageId 
+    const response = await apiClient.post('/finalize-onboarding', {
+      sessionId,
+      selectedPageId
     });
     return response.data;
   } catch (error) {
