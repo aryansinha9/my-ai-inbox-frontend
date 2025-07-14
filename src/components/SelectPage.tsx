@@ -4,7 +4,7 @@ import { type User } from '../types';
 
 interface SelectPageProps {
   sessionId: string;
-  onOnboardingComplete: (sessionId: string, selectedPageId: string) => void;
+  onOnboardingComplete: (user: User) => void;
 }
 
 const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete }) => {
@@ -38,35 +38,50 @@ const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete
     setError('');
     try {
       const finalUser = await finalizeOnboarding(sessionId, selectedPageId);
-      onOnboardingComplete(sessionId, selectedPageId);
+      onOnboardingComplete(finalUser);
     } catch (err) {
       setError('An error occurred. Please try again.');
       console.error(err);
       setIsFinalizing(false);
     }
   };
-  
+
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-slate-100"><p>Loading your pages...</p></div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100">
+        <p>Loading your pages...</p>
+      </div>
+    );
   }
 
   if (error) {
-     return <div className="flex min-h-screen items-center justify-center bg-slate-100"><p className="text-red-500">{error}</p></div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md space-y-6 rounded-2xl bg-white p-8 shadow-xl">
         <div>
-          <h2 className="text-center text-2xl font-bold tracking-tight text-slate-900">Connect an Instagram Page</h2>
-          <p className="mt-2 text-center text-sm text-slate-600">Choose which business page you want to use with the AI.</p>
+          <h2 className="text-center text-2xl font-bold tracking-tight text-slate-900">
+            Connect an Instagram Page
+          </h2>
+          <p className="mt-2 text-center text-sm text-slate-600">
+            Choose which business page you want to use with the AI.
+          </p>
         </div>
+
         <div className="space-y-4">
           {pages.map((page) => (
             <div key={page.id}>
               <label
                 className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
-                  selectedPageId === page.id ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-500' : 'border-slate-300 hover:bg-slate-50'
+                  selectedPageId === page.id
+                    ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-500'
+                    : 'border-slate-300 hover:bg-slate-50'
                 }`}
               >
                 <span className="font-medium text-slate-800">{page.name}</span>
@@ -82,6 +97,7 @@ const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete
             </div>
           ))}
         </div>
+
         <div>
           <button
             onClick={handleFinalize}
