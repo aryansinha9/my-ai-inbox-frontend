@@ -1,3 +1,5 @@
+// frontend/src/components/ui/SelectPage.tsx
+
 import React, { useState, useEffect } from 'react';
 import { getOnboardingSession, finalizeOnboarding } from '../services/api';
 import { type User } from '../types';
@@ -13,6 +15,9 @@ const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete
   const [isLoading, setIsLoading] = useState(true);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [error, setError] = useState('');
+
+  // --- ADDED: State to track if the user has agreed to the terms ---
+  const [hasAgreed, setHasAgreed] = useState(false);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -34,13 +39,21 @@ const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete
       setError('Please select a page to continue.');
       return;
     }
+    // --- ADDED: Validation for the terms checkbox ---
+    if (!hasAgreed) {
+      setError('You must agree to the terms to proceed.');
+      return;
+    }
     setIsFinalizing(true);
     setError('');
     try {
-      const finalUser = await finalizeOnboarding(sessionId, selectedPageId);
+      // --- UPDATED: Pass the agreement status to the API call ---
+      const finalUser = await finalizeOnboarding(sessionId, selectedPageId, hasAgreed);
       onOnboardingComplete(finalUser);
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      // Assuming the error from the API is helpful, you can display it
+      const errorMessage = (err as any)?.response?.data?.error || 'An error occurred. Please try again.';
+      setError(errorMessage);
       console.error(err);
       setIsFinalizing(false);
     }
@@ -50,14 +63,6 @@ const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
         <p>Loading your pages...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100">
-        <p className="text-red-500">{error}</p>
       </div>
     );
   }
@@ -98,11 +103,35 @@ const SelectPage: React.FC<SelectPageProps> = ({ sessionId, onOnboardingComplete
           ))}
         </div>
 
+        {/* --- ADDED: Terms and Conditions Checkbox --- */}
+        <div className="flex items-start space-x-3 pt-4">
+            <input
+                id="terms-agreement"
+                name="terms-agreement"
+                type="checkbox"
+                checked={hasAgreed}
+                onChange={(e) => setHasAgreed(e.target.checked)}
+                className="h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500 mt-0.5"
+            />
+            <div className="text-sm">
+                <label htmlFor="terms-agreement" className="font-medium text-slate-700">
+                    I have read and agree to the
+                    {/* Make sure these hrefs point to your actual policy pages */}
+                    <a href="/terms.html" target="_blank" rel="noopener noreferrer" className="ml-1 text-violet-600 hover:underline">Terms & Conditions</a> and 
+                    <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="ml-1 text-violet-600 hover:underline">Privacy Policy</a>.
+                </label>
+            </div>
+        </div>
+        
+        {/* Display any errors, including the new validation error */}
+        {error && <p className="text-sm text-red-600">{error}</p>}
+
         <div>
+          {/* --- UPDATED: Button's disabled logic now includes hasAgreed --- */}
           <button
             onClick={handleFinalize}
-            disabled={!selectedPageId || isFinalizing}
-            className="flex w-full justify-center rounded-lg bg-violet-600 py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:opacity-50"
+            disabled={!selectedPageId || !hasAgreed || isFinalizing}
+            className="flex w-full justify-center rounded-lg bg-violet-600 py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isFinalizing ? 'Finalizing...' : 'Continue'}
           </button>
