@@ -99,7 +99,8 @@ export const finalizeOnboarding = async (sessionId: string, selectedPageId: stri
   try {
     const response = await apiClient.post('/finalize-onboarding', {
       sessionId,
-      selectedPageId
+      selectedPageId,
+      agreedToTerms
     });
     return response.data;
   } catch (error) {
