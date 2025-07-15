@@ -2,7 +2,8 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // Your backend URL
+// Ensure this line is correct
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -26,33 +27,30 @@ export const getUserById = async (userId: string) => {
 // --- CONVERSATION FUNCTIONS ---
 
 export const fetchConversations = async (platform: string) => {
-  const storedUser = localStorage.getItem('ai-inbox-user');
-  if (!storedUser) {
-    console.error("No user found in localStorage to fetch conversations for.");
-    return [];
-  }
-
-  const user = JSON.parse(storedUser);
-  const userId = user._id;
-
-  try {
-    const response = await apiClient.get(`/conversations/${platform}`, {
-      params: { userId: userId }
-    });
-
-    return response.data.map((c: any) => ({
-      ...c,
-      id: c._id
-    }));
-  } catch (error) {
-    console.error("Error fetching conversations:", error);
-    return [];
-  }
+    const storedUser = localStorage.getItem('ai-inbox-user');
+    if (!storedUser) {
+        console.error("No user found in localStorage to fetch conversations for.");
+        return [];
+    }
+    const user = JSON.parse(storedUser);
+    const userId = user._id;
+    try {
+        const response = await apiClient.get(`/conversations/${platform}`, {
+            params: { userId: userId }
+        });
+        return response.data.map((c: any) => ({
+            ...c,
+            id: c._id
+        }));
+    } catch (error) {
+        console.error("Error fetching conversations:", error);
+        return [];
+    }
 };
 
 export const updateConversationAiStatus = async (conversationId: string, isEnabled: boolean) => {
   const response = await apiClient.patch(`/conversations/${conversationId}/toggle-ai`, { isEnabled });
-  return response.data.isEnabled;
+  return response.data.isAiEnabled;
 };
 
 // --- PLATFORM STATUS FUNCTIONS ---
@@ -63,7 +61,7 @@ export const fetchPlatformAiStatus = async (platform: string) => {
     return response.data.isEnabled;
   } catch (error) {
     console.error(`Error fetching platform AI status for ${platform}:`, error);
-    return true;
+    return true; 
   }
 };
 
@@ -72,11 +70,10 @@ export const updatePlatformAiStatus = async (platform: string, isEnabled: boolea
   return response.data.isEnabled;
 };
 
-// --- UPDATED AI REPLY FUNCTION ---
 export const generateAiReply = async (prompt: string) => {
   try {
     const response = await apiClient.post('/suggest-reply', { prompt });
-    return response.data.reply; // Return the 'reply' field from the JSON response
+    return response.data.reply;
   } catch (error) {
     console.error("Error generating AI reply:", error);
     throw new Error("Failed to generate suggestion. Please try again.");
@@ -95,16 +92,21 @@ export const getOnboardingSession = async (sessionId: string) => {
   }
 };
 
-export const finalizeOnboarding = async (sessionId: string, selectedPageId: string) => {
+
+// --- THIS IS THE CORRECTED FUNCTION ---
+export const finalizeOnboarding = async (sessionId: string, selectedPageId: string, agreedToTerms: boolean) => {
   try {
-    const response = await apiClient.post('/finalize-onboarding', {
-      sessionId,
+    // The apiClient will now send all three pieces of data in the request body
+    const response = await apiClient.post('/finalize-onboarding', { 
+      sessionId, 
       selectedPageId,
-      agreedToTerms
+      agreedToTerms // This variable is now correctly defined and passed
     });
     return response.data;
   } catch (error) {
     console.error('Error finalizing onboarding:', error);
-    throw new Error('Failed to complete onboarding');
+    // Re-throw the error so the component can catch it and display a message
+    throw error; 
   }
 };
+// --- END OF CORRECTION ---
