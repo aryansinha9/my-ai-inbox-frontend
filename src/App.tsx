@@ -1,10 +1,14 @@
 // frontend/src/App.tsx
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, 'useState', 'useCallback', 'useEffect' from 'react';
+
+// --- CORRECTED IMPORT PATHS ---
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import SelectPage from './components/SelectPage';
-import EnterEmail from './components/EnterEmail'; // IMPORT NEW COMPONENT
+import EnterEmail from './components/EnterEmail'; // Assuming it's directly in components
+// --- END OF CORRECTION ---
+
 import { type User } from './types';
 import { getUserById } from './services/api';
 
