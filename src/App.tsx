@@ -1,10 +1,10 @@
 // frontend/src/App.tsx
 
 import React, { useState, useCallback, useEffect } from 'react';
-import Login from './components/ui/Login';
-import Dashboard from './components/ui/Dashboard';
-import SelectPage from './components/ui/SelectPage';
-import EnterEmail from './components/ui/EnterEmail'; // IMPORT NEW COMPONENT
+import Login from './components/Login';
+import Dashboard from './components/Dashboard';
+import SelectPage from './components/SelectPage';
+import EnterEmail from './components/EnterEmail'; // IMPORT NEW COMPONENT
 import { type User } from './types';
 import { getUserById } from './services/api';
 
