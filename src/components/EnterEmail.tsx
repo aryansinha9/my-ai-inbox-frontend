@@ -1,7 +1,7 @@
 // frontend/src/components/EnterEmail.tsx
 
-import React, { useState, useEffect } from 'react';
-import { addOnboardingEmail } from '../../services/api'; // We will create this next
+import React, { useState } from 'react';
+import { addOnboardingEmail } from '../services/api';
 
 interface EnterEmailProps {
   sessionId: string;
