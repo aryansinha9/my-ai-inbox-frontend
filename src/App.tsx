@@ -1,18 +1,16 @@
 // frontend/src/App.tsx
 
-import React, 'useState', 'useCallback', 'useEffect' from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 // --- CORRECTED IMPORT PATHS ---
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import SelectPage from './components/SelectPage';
-import EnterEmail from './components/EnterEmail'; // Assuming it's directly in components
-// --- END OF CORRECTION ---
+import EnterEmail from './components/EnterEmail';
 
 import { type User } from './types';
 import { getUserById } from './services/api';
 
-// --- NEW: Define the possible onboarding steps ---
 type OnboardingStep = 'enter-email' | 'select-page' | 'none';
 
 const App: React.FC = () => {
@@ -21,7 +19,6 @@ const App: React.FC = () => {
   const [error, setError] = useState<string>('');
   
   const [onboardingSessionId, setOnboardingSessionId] = useState<string | null>(null);
-  // --- NEW: State to control which onboarding screen to show ---
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('none');
   
   const handleLogout = useCallback(() => {
@@ -42,15 +39,13 @@ const App: React.FC = () => {
     const checkAuth = async () => {
       setIsLoading(true);
       const urlParams = new URLSearchParams(window.location.search);
-      const pathname = window.location.pathname; // Get the current URL path
+      const pathname = window.location.pathname;
 
       const userIdFromUrl = urlParams.get('userId');
       const sessionIdFromUrl = urlParams.get('sessionId');
 
-      // --- THIS IS THE UPDATED ROUTING LOGIC ---
       if (sessionIdFromUrl) {
         setOnboardingSessionId(sessionIdFromUrl);
-        // Decide which component to show based on the URL path
         if (pathname === '/enter-email') {
           setOnboardingStep('enter-email');
         } else if (pathname === '/select-page') {
@@ -76,7 +71,12 @@ const App: React.FC = () => {
 
       const storedUser = localStorage.getItem('ai-inbox-user');
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (e) {
+          console.error("Failed to parse stored user", e);
+          localStorage.removeItem('ai-inbox-user');
+        }
       }
       setIsLoading(false);
     };
@@ -88,7 +88,6 @@ const App: React.FC = () => {
     return <div className="flex min-h-screen items-center justify-center bg-slate-100"><p>Loading...</p></div>;
   }
   
-  // --- THIS IS THE UPDATED RENDER LOGIC ---
   if (onboardingSessionId) {
     if (onboardingStep === 'enter-email') {
       return <EnterEmail sessionId={onboardingSessionId} />;
