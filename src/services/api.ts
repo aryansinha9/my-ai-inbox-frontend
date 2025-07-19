@@ -92,8 +92,17 @@ export const getOnboardingSession = async (sessionId: string) => {
   }
 };
 
+// --- NEW FUNCTION ADDED HERE ---
+export const addOnboardingEmail = async (sessionId: string, email: string) => {
+  try {
+    const response = await apiClient.post('/onboarding/add-email', { sessionId, email });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding onboarding email:', error);
+    throw new Error('Failed to save email');
+  }
+};
 
-// --- THIS IS THE CORRECTED FUNCTION ---
 export const finalizeOnboarding = async (sessionId: string, selectedPageId: string, agreedToTerms: boolean) => {
   try {
     // The apiClient will now send all three pieces of data in the request body
