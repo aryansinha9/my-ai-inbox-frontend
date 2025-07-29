@@ -1,9 +1,9 @@
+// frontend/src/components/inbox/ConversationList.tsx
 
 import React, { useState, useEffect } from 'react';
 import { type Conversation, type Platform } from '../../types';
 import { fetchConversations, updateConversationAiStatus } from '../../services/api';
 import ConversationItem from './ConversationItem';
-import Spinner from '../ui/Spinner';
 
 interface ConversationListProps {
   platform: Platform;
@@ -13,41 +13,25 @@ interface ConversationListProps {
 const ConversationList: React.FC<ConversationListProps> = ({ platform, isPlatformAiEnabled }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadConversations = async () => {
       setLoading(true);
+      setError(null);
       try {
         const data = await fetchConversations(platform);
-        // If platform AI is disabled, all conversation toggles should reflect that initially.
-        const adjustedData = data.map(c => ({
-            ...c,
-            isAiEnabled: isPlatformAiEnabled ? c.isAiEnabled : false,
-        }));
-        setConversations(adjustedData);
+        setConversations(data);
       } catch (error) {
         console.error('Failed to fetch conversations:', error);
+        setError('Could not load conversations. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
     loadConversations();
-  }, [platform, isPlatformAiEnabled]);
-  
-// --- NEW & CRITICAL FIX ---
-  // This effect updates the display when the global toggle is flipped
-  useEffect(() => {
-    // If the global AI is disabled, we want to visually update all toggles to "off"
-    // without actually changing their state in the database.
-    setConversations(currentConversations =>
-      currentConversations.map(c => ({
-        ...c,
-        // The individual toggle's enabled state is now a combination of its own state AND the global state
-        isAiEnabledForDisplay: isPlatformAiEnabled ? c.isAiEnabled : false,
-      }))
-    );
-  }, [isPlatformAiEnabled]);
+  }, [platform]); // This effect ONLY re-runs when the platform changes.
 
   const handleToggle = async (conversationId: string, isEnabled: boolean) => {
     // Optimistic update
@@ -62,33 +46,35 @@ const ConversationList: React.FC<ConversationListProps> = ({ platform, isPlatfor
         setConversations(prev =>
             prev.map(c => (c.id === conversationId ? { ...c, isAiEnabled: !isEnabled } : c))
         );
+        alert('Failed to save your change. Please check your connection.');
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full p-10">
-        <Spinner />
-      </div>
-    );
+    return <div className="p-8 text-center text-slate-500">Loading conversations...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-red-600">{error}</div>;
   }
 
   if (conversations.length === 0) {
     return (
-      <div className="text-center py-20 px-6">
+      <div className="py-20 text-center">
         <h3 className="text-lg font-semibold text-slate-700">No conversations yet</h3>
-        <p className="text-slate-500 mt-1">New messages from {platform} will appear here.</p>
+        <p className="mt-1 text-slate-500">New messages from your {platform} page will appear here.</p>
       </div>
     );
   }
 
   return (
-    <ul className="divide-y divide-slate-200">
+    <ul className="divide-y divide-slate-100">
       {conversations.map((convo) => (
         <ConversationItem
           key={convo.id}
           conversation={convo}
           onToggle={handleToggle}
+          // THE FIX: The `isPlatformAiEnabled` prop directly controls the disabled state
           isPlatformAiEnabled={isPlatformAiEnabled}
         />
       ))}
